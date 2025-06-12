@@ -33,6 +33,7 @@ type Participant = {
 }
 
 interface Settlement {
+  id?: string;
   from_participant: string
   to_participant: string
   amount: number
@@ -126,6 +127,9 @@ export default function GroupPage() {
       alert('データの取得に失敗しました\n' + ((error as any)?.message || JSON.stringify(error)))
     } finally {
       setIsLoading(false)
+      setTimeout(() => {
+        setSettlements(prev => (payments.length === 0 ? [] : (prev && prev.length > 0 ? prev : calculateSettlements())));
+      }, 0);
     }
   }
 
@@ -145,9 +149,11 @@ export default function GroupPage() {
       const currentBalance = balances.get(payment.paid_by) || 0
       balances.set(payment.paid_by, currentBalance + payment.amount)
 
-      // 対象者の残高を減らす
-      const perPerson = payment.amount / payment.targets.length
-      payment.targets.forEach(target => {
+      // 支払った人とtargetsを合成し、重複なしの全員で割る
+      const allTargets = Array.from(new Set([...(payment.targets || []), payment.paid_by]))
+      if (allTargets.length === 0) return;
+      const perPerson = payment.amount / allTargets.length
+      allTargets.forEach(target => {
         const currentBalance = balances.get(target) || 0
         balances.set(target, currentBalance - perPerson)
       })
@@ -236,9 +242,33 @@ export default function GroupPage() {
     }
   }
 
+  // settlementsをリセット＆再計算・再insertする関数
+  const resetAndRecreateSettlements = async () => {
+    // 既存のsettlementsを全削除
+    await supabase.from('settlements').delete().eq('group_id', params.id);
+    // 支払いが0件ならinsertしない
+    if (payments.length === 0) return;
+    // 再計算してinsert
+    const newSettlements = calculateSettlements();
+    for (const s of newSettlements) {
+      await supabase.from('settlements').insert({
+        group_id: params.id,
+        from_participant: s.from_participant,
+        to_participant: s.to_participant,
+        amount: s.amount,
+        status: 'pending',
+      });
+    }
+  }
+
+  // 支払い追加・編集・削除時に呼び出す
   const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
+      // 支払った人がtargetsに含まれていなければ追加
+      const fixedTargets = selectedTargets.includes(newPayment.paid_by)
+        ? selectedTargets
+        : [...selectedTargets, newPayment.paid_by]
       const { error } = await supabase
         .from('payments')
         .insert({
@@ -246,14 +276,13 @@ export default function GroupPage() {
           title: newPayment.title,
           amount: Number(newPayment.amount),
           paid_by: newPayment.paid_by,
-          targets: selectedTargets
+          targets: fixedTargets
         })
-
       if (error) throw error
-
       setNewPayment({ title: '', amount: '', paid_by: '' })
       setSelectedTargets([])
       setToast('支払いを追加しました')
+      await resetAndRecreateSettlements()
       await fetchGroupData()
     } catch (e: any) {
       console.error('支払いの追加に失敗:', e)
@@ -264,24 +293,26 @@ export default function GroupPage() {
   const handleEditPayment = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingPayment) return
-
     try {
+      // 支払った人がtargetsに含まれていなければ追加
+      const fixedTargets = selectedTargets.includes(newPayment.paid_by)
+        ? selectedTargets
+        : [...selectedTargets, newPayment.paid_by]
       const { error } = await supabase
         .from('payments')
         .update({
           title: newPayment.title,
           amount: Number(newPayment.amount),
           paid_by: newPayment.paid_by,
-          targets: selectedTargets
+          targets: fixedTargets
         })
         .eq('id', editingPayment.id)
-
       if (error) throw error
-
       setNewPayment({ title: '', amount: '', paid_by: '' })
       setSelectedTargets([])
       setEditingPayment(null)
       setToast('支払いを更新しました')
+      await resetAndRecreateSettlements()
       await fetchGroupData()
     } catch (e) {
       console.error('支払いの更新に失敗:', e)
@@ -291,16 +322,14 @@ export default function GroupPage() {
 
   const handleDeletePayment = async (paymentId: string) => {
     if (!confirm('この支払いを削除してもよろしいですか？')) return
-
     try {
       const { error } = await supabase
         .from('payments')
         .delete()
         .eq('id', paymentId)
-
       if (error) throw error
-
       setToast('支払いを削除しました')
+      await resetAndRecreateSettlements()
       await fetchGroupData()
     } catch (e) {
       console.error('支払いの削除に失敗:', e)
@@ -443,7 +472,7 @@ export default function GroupPage() {
               </button>
               {nlError && <div className="text-red-500 text-sm mt-1">{nlError}</div>}
             </div>
-            <form onSubmit={handleAddPayment} className="space-y-4">
+            <form onSubmit={editingPayment ? handleEditPayment : handleAddPayment} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-white mb-1">タイトル</label>
                 <input
@@ -509,7 +538,7 @@ export default function GroupPage() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button type="submit" className="btn-primary">追加</button>
+                <button type="submit" className="btn-primary">{editingPayment ? '更新' : '追加'}</button>
                 {editingPayment && (
                   <button type="button" onClick={() => { setEditingPayment(null); setNewPayment({ title: '', amount: '', paid_by: '' }) }} className="btn-secondary">キャンセル</button>
                 )}
@@ -529,18 +558,53 @@ export default function GroupPage() {
           {/* 精算リストカード */}
           <div className="card">
             <h2 className="text-lg font-semibold mb-4 text-white">精算リスト</h2>
+            {settlements.length === 0 && !isLoading && calculateSettlements().length > 0 && (
+              <button
+                className="btn-primary mb-4"
+                onClick={async () => {
+                  const newSettlements = calculateSettlements();
+                  for (const s of newSettlements) {
+                    await supabase.from('settlements').insert({
+                      group_id: params.id,
+                      from_participant: s.from_participant,
+                      to_participant: s.to_participant,
+                      amount: s.amount,
+                      status: 'pending',
+                    });
+                  }
+                  fetchGroupData();
+                }}
+              >
+                精算リストを確定
+              </button>
+            )}
             <div className="space-y-2">
-              {calculateSettlements().map((settlement, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              {(settlements.length > 0 ? settlements : calculateSettlements()).map((settlement, index) => (
+                <div
+                  key={settlement.id ?? index}
+                  className={`flex items-center justify-between p-3 bg-gray-700 rounded-lg transition-opacity ${settlement.status === 'completed' ? 'opacity-50 line-through' : ''}`}
+                >
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{settlement.from_participant}</span>
+                    <input
+                      type="checkbox"
+                      checked={settlement.status === 'completed'}
+                      disabled={!settlement.id}
+                      onChange={() => {
+                        if (settlement.id) handleUpdateSettlementStatus(settlement.id, settlement.status === 'completed' ? 'pending' : 'completed')
+                      }}
+                      className="mr-2 accent-pink-400 w-5 h-5"
+                    />
+                    <span className="font-bold text-white">{settlement.from_participant}</span>
                     <span className="text-white">→</span>
-                    <span className="font-medium">{settlement.to_participant}</span>
+                    <span className="font-bold text-white">{settlement.to_participant}</span>
+                    {!settlement.id && (
+                      <span className="ml-2 text-xs text-gray-300">（確定後に有効化）</span>
+                    )}
                   </div>
-                  <span className="font-medium text-white">¥{settlement.amount.toLocaleString()}</span>
+                  <span className="font-bold text-white">¥{settlement.amount.toLocaleString()}</span>
                 </div>
               ))}
-              {calculateSettlements().length === 0 && (
+              {(settlements.length === 0 && calculateSettlements().length === 0) && (
                 <p className="text-white text-center py-4">精算は必要ありません</p>
               )}
             </div>
@@ -550,19 +614,22 @@ export default function GroupPage() {
             <h2 className="text-lg font-semibold mb-4 text-white">支払い履歴</h2>
             <div className="space-y-4">
               {payments.map((payment) => (
-                <div key={payment.id} className="border rounded-lg p-4 bg-gray-50 shadow-sm cursor-pointer hover:bg-indigo-50 transition" onClick={() => setSelectedPayment(payment)}>
+                <div key={payment.id} className="border rounded-lg p-4 bg-gray-700 shadow-sm cursor-pointer hover:bg-indigo-800 transition">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-medium text-white">{payment.title}</h3>
+                      <h3 className="font-bold text-white">{payment.title}</h3>
                       <p className="text-xs text-white">{new Date(payment.created_at).toLocaleString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-white">¥{payment.amount.toLocaleString()}</p>
+                      <p className="font-bold text-white">¥{payment.amount.toLocaleString()}</p>
                       <p className="text-xs text-white">支払い: {payment.paid_by}</p>
+                      {payment.targets && payment.targets.length > 0 && (
+                        <p className="text-xs text-white">対象者: {(payment.targets || []).filter(t => t !== payment.paid_by).join(', ')}</p>
+                      )}
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={(e) => { e.stopPropagation(); setEditingPayment(payment); setNewPayment({ title: payment.title, amount: payment.amount.toString(), paid_by: payment.paid_by }) }} className="text-indigo-500 hover:text-indigo-700 text-sm">編集</button>
-                      <button onClick={(e) => { e.stopPropagation(); handleDeletePayment(payment.id) }} className="text-red-500 hover:text-red-700 text-sm">削除</button>
+                      <button onClick={(e) => { e.stopPropagation(); setEditingPayment(payment); setNewPayment({ title: payment.title, amount: payment.amount.toString(), paid_by: payment.paid_by }); setSelectedTargets((payment.targets || []).filter(t => t !== payment.paid_by)); }} className="text-indigo-400 hover:text-indigo-200 text-sm">編集</button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDeletePayment(payment.id) }} className="text-pink-400 hover:text-pink-300 text-sm">削除</button>
                     </div>
                   </div>
                 </div>
