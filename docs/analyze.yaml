@@ -1,0 +1,203 @@
+functional_requirements:
+  authentication_and_authorization:
+    supabase_auth:
+      methods:
+        - email_password
+        - oauth
+    row_level_security:
+      enforce: true
+      ci_testing: true
+    rate_limiting:
+      per_user_per_minute: 60
+      per_group_per_minute: 200
+
+  group_management:
+    allow_actions:
+      - create_group
+      - join_group
+      - invite_member
+      - remove_member
+    roles:
+      owner:
+        permissions:
+          - manage_members
+          - all_operations
+      member:
+        permissions:
+          - view_receipts
+          - add_receipt
+    ui:
+      wizard_steps:
+        - step1: group_name
+        - step2: send_invites
+      accessibility:
+        aria_attributes: true
+        screen_reader_support: true
+
+  receipt_management:
+    storage:
+      bucket_name: receipts
+      privacy: private
+    database:
+      table: receipts
+      columns:
+        - id
+        - file_path
+        - group_id
+        - created_by
+        - ocr_text
+        - total_amount
+        - people
+        - split_amount
+        - version
+        - created_at
+    ocr_cache:
+      key: image_hash_plus_group_id
+    audit_logging:
+      table: receipt_audit_logs
+      columns:
+        - id
+        - receipt_id
+        - user_id
+        - action
+        - timestamp
+
+  ocr_processing:
+    implementation: supabase_edge_function
+    runtime: deno
+    library: tesseract.js
+    preprocessing:
+      - resize
+      - grayscale
+      - binarization
+    fallback:
+      manual_amount_input: true
+    optional_structured_parse:
+      provider: openai_api
+    performance_slo:
+      p95_latency_ms: 2000
+
+  calculation_and_display:
+    participants_input: true
+    rounding_methods:
+      - round
+      - ceil
+      - floor
+    display:
+      primary_fields:
+        - total_amount
+        - date
+        - store_name
+      collapse_details: true
+    manual_correction: true
+
+  realtime_sync_and_concurrency:
+    realtime: supabase_realtime
+    optimistic_locking:
+      column: version
+      merge_ui: true
+
+  notifications:
+    channels:
+      - push
+      - email
+    user_settings:
+      - immediate
+      - daily_digest
+      - quiet_hours
+    templates_compliance:
+      - specific_electronic_mail_law
+      - anti_spam_regulations
+
+non_functional_requirements:
+  scalability_and_performance:
+    concurrency_metrics: cloud_logs
+    high_load_fallback: job_queue
+    cdn_caching: true
+    performance_budgets:
+      frontend_load_ms: 1000
+      api_p95_ms: 500
+
+  availability_and_monitoring:
+    error_alerting:
+      ocr_errors: slack
+      function_timeouts: slack
+    periodic_reports:
+      - ocr_success_rate
+      - rls_test_results
+      - system_uptime
+    observability:
+      distributed_tracing: true
+      logs_retention_days: 30
+
+  disaster_recovery:
+    backup_frequency_hours: 24
+    recovery_objectives:
+      rto_hours: 2
+      rpo_hours: 1
+
+  data_migration_and_release_management:
+    migration_scripts: automated
+    phased_rollout: true
+    feature_flags: true
+
+  security_and_privacy:
+    encryption:
+      at_rest: true
+      in_transit: true
+      key_management: supabase_managed
+    image_retention:
+      auto_delete_after_hours: 24
+      optional: true
+    data_masking_options:
+      - store_name
+      - date_time
+    privacy_policy_includes:
+      - group_data_sharing
+      - data_retention_policy
+    compliance:
+      soc2: true
+      iso27001: planning
+
+  cost_optimization:
+    ocr_cache_table: true
+    archive_and_compress_old_receipts: true
+    usage_analytics:
+      track:
+        - receipts_processed
+        - active_groups
+        - active_users
+
+  compliance_and_legal:
+    email_templates_compliance:
+      - specific_electronic_mail_law
+      - anti_spam_regulations
+    terms_and_privacy_policy_includes:
+      - group_data_sharing_scope
+      - data_retention_periods
+
+  accessibility:
+    keyboard_navigation: tested
+    focus_management: tested
+    aria_live_regions: implemented
+
+  internationalization:
+    supported_locales:
+      - ja
+      - en
+    date_format: locale_based
+
+  offline_support:
+    pwa: true
+    local_cache_entity:
+      - receipts
+      - settings
+
+  developer_experience:
+    api_mocking: true
+    local_env_snapshots: true
+    ci_cd: github_actions
+
+  user_feedback:
+    in_app_feedback_widget: true
+    support_contact: support@example.com
