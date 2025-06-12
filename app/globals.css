@@ -3,7 +3,11 @@
 @tailwind utilities;
 
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  background: #18181b !important;
+  color: #fff;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
 }
 
 @layer base {
@@ -29,34 +33,201 @@ body {
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
   }
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 210 40% 98%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:opacity-50;
+    display: inline-flex;
+    justify-content: center;
+    border-radius: 0.6rem;
+    background: #f472b6;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.5rem 1.5rem;
+    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
+    transition: background 0.2s;
+    border: none;
+  }
+  .btn-primary:hover {
+    background: #ec4899;
   }
 
   .btn-secondary {
-    @apply inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50;
+    display: inline-flex;
+    justify-content: center;
+    border-radius: 0.6rem;
+    background: #23272f;
+    color: #60a5fa;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid #2a2d34;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn-secondary:hover {
+    background: #18181b;
+    color: #3b82f6;
+  }
+
+  .btn-danger {
+    display: inline-flex;
+    justify-content: center;
+    border-radius: 0.6rem;
+    background: #23272f;
+    color: #f472b6;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid #2a2d34;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn-danger:hover {
+    background: #18181b;
+    color: #ec4899;
   }
 
   .input-primary {
-    @apply block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6;
+    display: block;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid #2a2d34;
+    background: #23272f;
+    color: #fff;
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+    transition: border 0.2s, background 0.2s, color 0.2s;
+  }
+  .input-primary:focus {
+    outline: none;
+    border-color: #60a5fa;
+  }
+  .input-primary::placeholder {
+    color: #b0b3b8;
+    opacity: 1;
   }
 
   .card {
-    @apply bg-white shadow rounded-lg overflow-hidden;
+    background: #23272f;
+    color: #fff;
+    border-radius: 1.2rem;
+    box-shadow: 0 6px 32px 0 rgba(0,0,0,0.18);
+    border: 1px solid #23272f;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: background 0.2s, color 0.2s;
   }
 
   .card-header {
-    @apply px-6 py-4 border-b border-gray-200;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid #2a2d34;
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: #fff;
   }
 
   .card-body {
-    @apply px-6 py-4;
+    padding: 1rem 1.5rem;
   }
 
   .card-footer {
-    @apply px-6 py-4 border-t border-gray-200;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #2a2d34;
   }
+
+  label {
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    margin-top: 0.4rem;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  /* 右上の操作ボタン */
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.6rem;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.4rem 1.2rem;
+    margin-left: 0.5rem;
+    box-shadow: 0 1px 4px 0 rgba(0,0,0,0.08);
+    border: none;
+    transition: background 0.2s, color 0.2s;
+  }
+  .action-btn.copy {
+    background: #23272f;
+    color: #fff;
+  }
+  .action-btn.copy:hover {
+    background: #18181b;
+    color: #fff;
+  }
+  .action-btn.edit {
+    background: #23272f;
+    color: #60a5fa;
+    border: 1px solid #2a2d34;
+  }
+  .action-btn.edit:hover {
+    background: #18181b;
+    color: #3b82f6;
+  }
+  .action-btn.delete {
+    background: #23272f;
+    color: #f472b6;
+    border: 1px solid #2a2d34;
+  }
+  .action-btn.delete:hover {
+    background: #18181b;
+    color: #ec4899;
+  }
+
+  /* アイコン色統一 */
+  .icon-accent {
+    color: #f472b6;
+  }
+
+  .subtext, .description, .card-description {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+    margin-top: 0.2rem;
+    line-height: 1.5;
+  }
+}
+
+.glass {
+  @apply backdrop-blur bg-white/60 dark:bg-gray-800/80 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700;
 } 
