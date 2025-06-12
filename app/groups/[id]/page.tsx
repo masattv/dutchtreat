@@ -119,7 +119,7 @@ export default function GroupPage() {
       }
     } catch (error) {
       console.error('Error:', error)
-      alert('データの取得に失敗しました\n' + (error?.message || JSON.stringify(error)))
+      alert('データの取得に失敗しました\n' + ((error as any)?.message || JSON.stringify(error)))
     } finally {
       setIsLoading(false)
     }
