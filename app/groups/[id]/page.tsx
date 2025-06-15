@@ -452,8 +452,8 @@ export default function GroupPage() {
           {/* 支払い追加カード */}
           <div className="card">
             <h2 className="text-lg font-semibold mb-4 text-white">支払いを追加</h2>
-            {/* 自然言語入力欄・支払い追加フォームはそのまま */}
-            <div className="mb-4">
+            {/* 自然言語入力欄・支払い追加フォームは一時的に非表示 */}
+            <div className="mb-4 hidden">
               <label className="block text-sm font-medium text-white mb-1">自然言語で追加</label>
               <textarea
                 value={nlInput}

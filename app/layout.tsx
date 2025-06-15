@@ -4,6 +4,7 @@ import './globals.css'
 import { cn } from '@/lib/utils'
 import HtmlClassProvider from './components/HtmlClassProvider'
 import DarkModeProvider from './components/DarkModeProvider'
+import NavMenu from './components/NavMenu'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,6 +22,7 @@ export default function RootLayout({
     <html lang="ja" className="h-full" suppressHydrationWarning>
       <body className={cn(inter.className)}>
         <DarkModeProvider>
+          <NavMenu />
           <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7578897320709624" crossOrigin="anonymous"></script>
           <div className="min-h-full">
             {children}
