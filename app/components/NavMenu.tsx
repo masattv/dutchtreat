@@ -3,7 +3,7 @@ import { BookOpenIcon, SparklesIcon } from '@heroicons/react/24/solid'
 
 export default function NavMenu() {
   return (
-    <nav className="w-full bg-gray-900 text-white py-3 mb-6 shadow">
+    <nav className="w-full bg-gray-900 text-white py-3 mb-6 sm:mb-6 mb-16 shadow z-20 sticky top-0">
       <ul className="flex flex-wrap gap-4 justify-center">
         <li><Link href="/">ホーム</Link></li>
         <li>
