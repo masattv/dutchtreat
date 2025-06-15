@@ -420,7 +420,7 @@ export default function GroupPage() {
       )}
 
       {/* ヘッダー */}
-      <div className="flex items-start justify-between mb-6 gap-4">
+      <div className="mb-6 gap-4 flex flex-col sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1 min-w-0">
           {isEditingGroup ? (
             <form onSubmit={handleUpdateGroup} className="flex gap-2 items-center">
@@ -438,7 +438,7 @@ export default function GroupPage() {
             <h1 className="text-3xl font-extrabold text-white truncate">{group.title}</h1>
           )}
         </div>
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-2 flex-shrink-0">
           <button onClick={() => router.push(`/groups/${params.id}/members`)} className="bg-white text-gray-900 rounded-lg px-4 py-2 shadow-sm transition">メンバーを追加</button>
           <button onClick={handleCopyUrl} className="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-lg px-4 py-2 shadow-sm transition">URLコピー</button>
           <button onClick={handleDeleteGroup} className="bg-red-50 hover:bg-red-100 text-red-600 rounded-lg px-4 py-2 transition">削除</button>
