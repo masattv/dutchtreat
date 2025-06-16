@@ -9,7 +9,7 @@ import NavMenu from './components/NavMenu'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Dutch Treat',
+  title: 'WariMemo',
   description: 'グループでの支払いを管理しましょう。',
 }
 
