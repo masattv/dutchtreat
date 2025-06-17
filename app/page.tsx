@@ -90,6 +90,18 @@ export default function Home() {
           <p className="text-white text-xs sm:text-sm text-center">グループURLをコピーして、誰でもすぐに参加可能。</p>
         </div>
       </section>
+
+      {/* フッター */}
+      <footer className="w-full text-center mt-8">
+        <a 
+          href="https://x.com/mk_dev_0430" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
+        >
+          @mk_dev_0430
+        </a>
+      </footer>
     </main>
   )
 } 
